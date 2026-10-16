@@ -7,5 +7,61 @@
 body {
     background-color: darkslategray;
     color: white;
+}
+
+#header {
+    text-align: center;
+}
+
+#index-previews {
+    
+    margin: 0 2em;
+    margin-top: 1em;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    width: auto;
+    justify-content: center;
+}
+
+.preview-card {
+    min-width: 0;
+    text-align: center;
+}
+
+.preview-card h3 {
+    margin: 15px 0 1px;
+    font-size: 14px;
+    line-height: 0px;
+}
+
+.preview-card img {
+    border-radius: 1em;
+    display: block;
+    width: 90%;
+    aspect-ratio: 1 / 1;
+    object-fit: contain;
+    background: #eee;
+    border: 1px solid #ccc;
+}
+
+@media (max-width: 500px) {
+    #index-previews {
+        gap: 10px;
+    }
+
+    .preview-card h3 {
+        font-size: 11px;
+    }
+}
+
+#gee-analyze {
+    width : 90%;
+    height: 40px;
+    background: lightgreen;
+    margin: 20px 2em 5px 2em;
+}
+
+#gee-panel {
     text-align: center;
 }

@@ -5,24 +5,100 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="styles.css"/>
+    
     <!--leaflet-->
      <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
      crossorigin=""/>
+
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
      crossorigin=""></script>
     
+    <!-- Official GEE Client Library for Browsers -->
+    <script src="https://ajax.googleapis.com/ajax/libs/googleee/0.1.300/earthengine-api.min.js"></script>
+
+    
     <title>Document</title>
 </head>
 <body>
-    <h1>Interactable Map</h1>
+    <div id="header">
+    <h1>Vegetation, Water and Chrolophyll Index</h1>
     <p>Drag the location marker around.</p>
+    </div>
     <div id="map"></div>
-    <script src="script.js">
+
+    <!--indices-->
+    <div id="index-previews">
+        <div class="preview-card">
+            
+            <img id="preview-ndvi" alt="NDVI vegetation preview">
+            <h3>NDVI</h3>
+            <p>Normalized Difference Vegetation Index</p>
+        </div>
+
+        <div class="preview-card">
+            
+            <img id="preview-gci" alt="GCI chlorophyll preview">
+            <h3>GCI</h3>
+             <p>Green Chlorophyll Index</p>
+        </div>
+
+        <div class="preview-card">
+            
+            <img id="preview-ndwi" alt="NDWI water preview">
+            <h3>NDWI</h3>
+             <p>Normalized Difference Water Index</p>
+        </div>
+    </div>
+
+    <div id="gee-panel">
+    <h2>Landsat Satellite Analysis</h2>
+
+    <p>Selected location: <span id="gee-location">Move the marker</span></p>
+
+    <label for="gee-start">Start date:</label>
+    <input type="date" id="gee-start"><br>
+
+    <label for="gee-end">End date:</label>
+    <input type="date" id="gee-end"><br>
+
     
+
+    <label for="gee-layer">Satellite layer:</label>
+    <p>Satellite layer:</p>
+        <label>
+            <input type="radio" name="gee-layer" value="true_color" checked>
+            True Color
+        </label>
+
+        <label>
+            <input type="radio" name="gee-layer" value="ndvi">
+            NDVI (Vegetation)
+        </label>
+
+        <label>
+            <input type="radio" name="gee-layer" value="ndwi">
+            NDWI (Water)
+        </label>
+
+        <label>
+            <input type="radio" name="gee-layer" value="gci">
+            GCI (Chlorophyll)
+        </label>
         
-    </script>
+        
+        
+
+
+        <br>
+    <button id="gee-analyze">Analyze Location</button>
+
+    <p id="gee-status">Ready to analyze.</p>
+    <div id="gee-results"></div>
+    </div>
+
+      <script src="script.js"> </script>
 </body>
 
 </html>

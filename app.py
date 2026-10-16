@@ -1,0 +1,235 @@
+
+
+
+from datetime import date, timedelta
+
+import ee
+from flask import Flask, jsonify, request
+from flask_cors import CORS
+
+EE_PROJECT = "whatever-511808"
+
+ee.Initialize(project=EE_PROJECT)
+
+app = Flask(__name__)
+CORS(app)
+
+
+def mask_clouds(image):
+    image = ee.Image(image)
+
+    qa = image.select("QA_PIXEL")
+    mask = qa.bitwiseAnd(63).eq(0)
+    mask = mask.And(image.select("QA_RADSAT").eq(0))
+
+    return ee.Image(image.updateMask(mask))
+
+
+def prepare_landsat(image):
+    image = ee.Image(image)
+    image = mask_clouds(image)
+
+    optical = ee.Image(
+        image.select(
+            ["SR_B2", "SR_B3", "SR_B4", "SR_B5", "SR_B6", "SR_B7"],
+            ["blue", "green", "red", "nir", "swir1", "swir2"]
+        ).multiply(0.0000275).add(-0.2)
+    )
+
+    ndvi = optical.normalizedDifference(
+        ["nir", "red"]
+    ).rename("NDVI")
+
+    ndwi = optical.normalizedDifference(
+        ["green", "nir"]
+    ).rename("NDWI")
+
+    gci = (
+        optical.select("nir")
+        .divide(optical.select("green"))
+        .subtract(1)
+        .rename("GCI")
+    )
+
+    lst = (
+        image.select("ST_B10")
+        .multiply(0.00341802)
+        .add(149)
+        .subtract(273.15)
+        .rename("LST_C")
+    )
+
+    return ee.Image(
+        optical.addBands([ndvi, ndwi, gci, lst])
+        .copyProperties(image, image.propertyNames())
+    )
+
+
+def make_tile_url(image, vis_params):
+    map_id = image.getMapId(vis_params)
+    return map_id["tile_fetcher"].url_format
+
+
+@app.route("/analyze", methods=["POST"])
+def analyze():
+    data = request.get_json(silent=True) or {}
+
+    try:
+
+        lat = float(data["latitude"])
+        lon = float(data["longitude"])
+
+
+
+        point = ee.Geometry.Point([lon, lat])
+        square = point.buffer(500).bounds()
+
+        vis = {
+            "ndvi": {"min": 0.1, "max": 0.8, "palette": ["#d73027", "#f46d43", "#fdae61", "#fee08b", "#ffffbf", "#d9ef8b", "#a6d96a", "#66bd63", "#1a9850"]},
+            "gci": {"min": 0, "max": 1, "palette": ["#77157e", "#873c86", "#a66da7", "#c4a0c5", "#dcdcdb", "#b5d0a9", "#7dbb70", "#46a83c", "#0d8b14"]},
+            "ndwi": {"min": -0.15, "max": 0.15, "palette": ["#e53935", "#ffeb3b", "#055a93"]}
+        }
+
+
+        if not (-90 <= lat <= 90):
+            raise ValueError("Latitude must be between -90 and 90.")
+
+        if not (-180 <= lon <= 180):
+            raise ValueError("Longitude must be between -180 and 180.")
+
+        end_date = data.get("end_date") or date.today().isoformat()
+        start_date = data.get("start_date") or (
+            date.today() - timedelta(days=730)
+        ).isoformat()
+
+        # Validate date strings and order.
+        date.fromisoformat(start_date)
+        date.fromisoformat(end_date)
+
+        if start_date >= end_date:
+            raise ValueError(
+                "End date must be later than start date."
+            )
+
+    except (KeyError, TypeError, ValueError) as exc:
+        return jsonify({"error": str(exc)}), 400
+
+    point = ee.Geometry.Point([lon, lat])
+
+    landsat8 = ee.ImageCollection(
+        "LANDSAT/LC08/C02/T1_L2"
+    )
+    landsat9 = ee.ImageCollection(
+        "LANDSAT/LC09/C02/T1_L2"
+    )
+
+    collection = (
+        landsat8.merge(landsat9)
+        .filterBounds(point)
+        .filterDate(start_date, end_date)
+        .sort("CLOUD_COVER")
+    )
+
+    try:
+        scene_count = collection.size().getInfo()
+
+        if scene_count == 0:
+            return jsonify({
+                "error": "No Landsat scenes found for this location and date range."
+            }), 404
+
+        scene = ee.Image(collection.first())
+        prepared = prepare_landsat(scene)
+
+        preview_images = {
+            "ndvi": prepared.select("NDVI").getThumbURL({
+                **vis["ndvi"],
+                "region": square,
+                "dimensions": "256x256",
+                "format": "png"
+            }),
+            "gci": prepared.select("GCI").getThumbURL({
+                **vis["gci"],
+                "region": square,
+                "dimensions": "256x256",
+                "format": "png"
+            }),
+            "ndwi": prepared.select("NDWI").getThumbURL({
+                **vis["ndwi"],
+                "region": square,
+                "dimensions": "256x256",
+                "format": "png"
+            })
+        }
+
+
+
+        prepared_image = ee.Image(prepared)
+
+        values = prepared_image.reduceRegion(
+            reducer=ee.Reducer.first(),
+            geometry=point,
+            scale=30,
+            maxPixels=1000000
+        ).getInfo()
+
+        metadata = scene.toDictionary([
+            "system:time_start",
+            "SPACECRAFT_ID",
+            "CLOUD_COVER",
+        ]).getInfo()
+
+        raw_bands = ee.Image(scene).select(
+            ["SR_B2", "SR_B3", "SR_B4", "SR_B5", "SR_B6", "SR_B7"],
+            [
+                "DN_B2_blue", "DN_B3_green", "DN_B4_red",
+                "DN_B5_nir", "DN_B6_swir1", "DN_B7_swir2",
+            ],
+        )
+
+        raw_values = raw_bands.reduceRegion(
+            reducer=ee.Reducer.first(),
+            geometry=point,
+            scale=30,
+            maxPixels=1000000,
+        ).getInfo()
+
+        values = {**(raw_values or {}), **(values or {})}
+
+        result = {
+            "latitude": lat,
+            "longitude": lon,
+            "date": date.fromtimestamp(
+                metadata["system:time_start"] / 1000
+            ).isoformat(),
+            "spacecraft": metadata.get("SPACECRAFT_ID"),
+            "cloud_cover": metadata.get("CLOUD_COVER"),
+            "scenes_found": scene_count,
+            "pixel_scale_m": 30,
+            "values": values,
+            "previews": preview_images,
+            "tiles": {
+                "true_color": make_tile_url(
+                    scene,
+                    {
+                        "bands": ["SR_B4", "SR_B3", "SR_B2"],
+                        "min": 7000,
+                        "max": 18000,
+                    },
+                ),
+                "ndvi": make_tile_url(prepared.select("NDVI"), vis["ndvi"]),
+                "gci": make_tile_url(prepared.select("GCI"), vis["gci"]),
+                "ndwi": make_tile_url(prepared.select("NDWI"), vis["ndwi"])
+            
+            },
+        }
+
+        return jsonify(result)
+
+    except Exception as exc:
+        app.logger.exception("Earth Engine analysis failed")
+        return jsonify({"error": str(exc)}), 500
+
+
+if __name__ == "__main__":
+    app.run(host="127.0.0.1", port=5000, debug=True)
