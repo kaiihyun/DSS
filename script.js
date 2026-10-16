@@ -82,7 +82,6 @@ let geeLocation = document.getElementById("gee-location");
 let geeStart = document.getElementById("gee-start");
 let geeEnd = document.getElementById("gee-end");
 const geeAnalyze = document.getElementById("gee-analyze");
-const geeLayers = document.querySelectorAll('input[name="gee-layer"]');
 let geeStatus = document.getElementById("gee-status");
 let geeResults = document.getElementById("gee-results");
 
@@ -95,12 +94,6 @@ function updateGEECoordinates() {
 }
 
 
-function displayIndexPreviews(previews) {
-    document.getElementById("preview-ndvi").src = previews.ndvi;
-    document.getElementById("preview-gci").src = previews.gci;
-    document.getElementById("preview-ndwi").src = previews.ndwi;
-    document.getElementById("preview-lst").src = previews.lst;
-}
 
 // Request Landsat analysis from the Flask backend.
 async function analyzeGEE() {
@@ -140,7 +133,7 @@ async function analyzeGEE() {
     geeLastResult = result;
     displayGEEResults(result);
     displayIndexPreviews(result.previews);
-    showGEELayer();
+    showGEELayer("true_color");
 
     geeStatus.textContent =
       `Analysis complete: ${result.date} (${result.spacecraft || "Landsat"})`;
@@ -198,51 +191,64 @@ function displayGEEResults(result) {
 }
 
 // Display the selected Earth Engine tile layer.
-function showGEELayer() {
-  if (!geeLastResult) return;
+function showGEELayer(layer) {
+    if (!geeLastResult || !geeLastResult.tiles[layer]) {
+        console.error("Layer not found:", layer);
+        return;
+    }
 
-  const selectedLayer = document.querySelector(
-        'input[name="gee-layer"]:checked'
-    ).value;
+    const tileUrl = geeLastResult.tiles[layer];
 
-    const tileUrl = geeLastResult.tiles[selectedLayer];
+    if (geeTileLayer) {
+        map.removeLayer(geeTileLayer);
+    }
 
-  if (!tileUrl) {
-    geeStatus.textContent = "That satellite layer is unavailable.";
-    return;
-  }
-
-  if (geeTileLayer) {
-    map.removeLayer(geeTileLayer);
-  }
-
-  geeTileLayer = L.tileLayer(tileUrl, {
-    opacity: 0.8,
-    maxZoom: 18,
-    attribution: "Google Earth Engine / USGS Landsat"
-  }).addTo(map);
+    geeTileLayer = L.tileLayer(tileUrl, {
+        opacity: 0.8,
+        maxZoom: 18,
+        attribution: "Google Earth Engine / USGS Landsat"
+    }).addTo(map);
 }
 
 geeAnalyze.addEventListener("click", analyzeGEE);
-geeLayers.forEach(radio => {
-    radio.addEventListener("change", showGEELayer);
-});
 
 
+//display previews
+function displayIndexPreviews(previews) {
+    // Landsat previews
+    document.getElementById("preview-landsat-ndvi").src =
+        previews.landsat.ndvi;
+
+    document.getElementById("preview-landsat-ndwi").src =
+        previews.landsat.ndwi;
+
+    document.getElementById("preview-landsat-gci").src =
+        previews.landsat.gci;
+
+    document.getElementById("preview-landsat-lst").src =
+        previews.landsat.lst;
+
+    // Sentinel-2 previews
+    const sentinel = previews.sentinel || {};
+
+    document.getElementById("preview-sentinel-ndvi").src =
+        sentinel.ndvi || "";
+
+    document.getElementById("preview-sentinel-ndwi").src =
+        sentinel.ndwi || "";
+
+    document.getElementById("preview-sentinel-gci").src =
+        sentinel.gci || "";
+    
+    document.getElementById("preview-sentinel-evi2").src =
+        previews.sentinel?.evi2 || "";
+    
+}
 
 //tapping images to change map layer
 
 document.querySelectorAll(".layer-preview").forEach((image) => {
     image.addEventListener("click", () => {
-        const layer = image.dataset.layer;
-
-        const radio = document.querySelector(
-            `input[name="gee-layer"][value="${layer}"]`
-        );
-
-        if (radio) {
-            radio.checked = true;
-            radio.dispatchEvent(new Event("change", { bubbles: true }));
-        }
+        showGEELayer(image.dataset.layer);
     });
 });

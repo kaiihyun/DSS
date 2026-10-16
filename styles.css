@@ -1,9 +1,9 @@
 #map {
     height: 380px;
-    margin-left: 2em;
-    margin-right: 2em;
+    margin: 0 2em;
     border-radius: 1em;
 }
+
 body {
     background-color: darkslategray;
     color: white;
@@ -13,15 +13,21 @@ body {
     text-align: center;
 }
 
+/* INDEX PREVIEWS */
 #index-previews {
-    
-    margin: 0 2em;
-    margin-top: 1em;
+    margin: 1em 2em;
+}
+
+.source-heading {
+    margin: 16px 0 8px;
+    font-size: 16px;
+}
+
+/* PREVIEW GRID */
+.preview-grid {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 10px;
-    width: auto;
-    justify-content: center;
 }
 
 .preview-card {
@@ -30,42 +36,22 @@ body {
 }
 
 .preview-card h3 {
-    margin: 15px 0 1px;
+    margin: 0 0 8px;
     font-size: 14px;
-    line-height: 0px;
+    line-height: normal;
 }
 
 .preview-card img {
-    border-radius: 1em;
     display: block;
-    width: 90%;
+    width: 100%;
     aspect-ratio: 1 / 1;
     object-fit: contain;
-    background: #eee;
-    border: 1px solid #ccc;
+    border: none;
+    border-radius: 0.3em;
+    background-color: darkolivegreen;
 }
 
-@media (max-width: 500px) {
-    #index-previews {
-        gap: 10px;
-    }
-
-    .preview-card h3 {
-        font-size: 11px;
-    }
-}
-
-#gee-analyze {
-    width : 90%;
-    height: 40px;
-    background: lightgreen;
-    margin: 20px 2em 5px 2em;
-}
-
-#gee-panel {
-    text-align: center;
-}
-
+/* CLICKABLE PREVIEWS */
 .layer-preview {
     cursor: pointer;
     transition: transform 0.2s ease;
@@ -73,4 +59,32 @@ body {
 
 .layer-preview:hover {
     transform: scale(1.03);
+}
+
+/* ANALYSIS PANEL */
+#gee-panel {
+    text-align: center;
+}
+
+#gee-analyze {
+    width: 90%;
+    height: 40px;
+    background: lightgreen;
+    margin: 20px 2em 5px;
+}
+
+/* MOBILE */
+@media (max-width: 500px) {
+    .preview-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    .source-heading {
+        font-size: 14px;
+    }
+
+    .preview-card h3 {
+        font-size: 11px;
+    }
 }

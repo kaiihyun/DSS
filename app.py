@@ -82,13 +82,14 @@ def analyze():
 
 
         point = ee.Geometry.Point([lon, lat])
-        square = point.buffer(250).bounds()
+        square = point.buffer(375).bounds()
 
         vis = {
             "ndvi": {"min": 0.0, "max": 0.7, "palette": ["#d73027", "#f46d43", "#fdae61", "#fee08b", "#ffffbf", "#d9ef8b", "#a6d96a", "#66bd63", "#1a9850"]},
             "gci": {"min": 0, "max": 0.5, "palette": ["#77157e", "#873c86", "#a66da7", "#c4a0c5", "#dcdcdb", "#b5d0a9", "#7dbb70", "#46a83c", "#0d8b14"]},
             "ndwi": {"min": 0, "max": 0.2, "palette": ["#e53935", "#ffeb3b", "#055a93"]},
-            "lst": { "min": 20, "max": 35, "palette": ["#313695", "#74add1", "#ffffbf", "#f46d43", "#a50026"]}
+            "lst": { "min": 20, "max": 35, "palette": ["#313695", "#74add1", "#ffffbf", "#f46d43", "#a50026"]},
+            "evi2": { "min": 0.0, "max": 0.8,"palette":  ["#d73027", "#f46d43", "#fdae61", "#fee08b", "#ffffbf", "#d9ef8b", "#a6d96a", "#66bd63", "#1a9850"]}
         }
 
 
@@ -131,7 +132,55 @@ def analyze():
         .sort("CLOUD_COVER")
     )
 
-    try:
+    #SENTINEL IMAGES
+    sentinel = (
+        ee.ImageCollection("COPERNICUS/S2_SR_HARMONIZED")
+        .filterBounds(point)
+        .filterDate(start_date, end_date)
+        .filter(ee.Filter.lt("CLOUDY_PIXEL_PERCENTAGE", 20))
+        .sort("CLOUDY_PIXEL_PERCENTAGE")
+    )
+
+    try: 
+        
+        sentinel_count = sentinel.size().getInfo()
+
+        if sentinel_count > 0:
+            s2_image = ee.Image(sentinel.first())
+
+            # Convert surface reflectance to reflectance values
+            s2 = s2_image.select(
+                ["B3", "B4", "B8", "B11"],
+                ["green", "red", "nir", "swir1"]
+            ).multiply(0.0001)
+
+            s2_ndvi = s2.normalizedDifference(
+                ["nir", "red"]
+            ).rename("NDVI")
+
+            s2_gci = (
+                s2.select("nir")
+                .divide(s2.select("green"))
+                .subtract(1)
+                .rename("GCI")
+            )
+
+            s2_ndmi = s2.normalizedDifference(
+                ["nir", "swir1"]
+            ).rename("NDMI")
+
+            s2_evi2 = (
+                s2.select("nir").subtract(s2.select("red"))
+                .multiply(2.5)
+                .divide(
+                    s2.select("nir")
+                    .add(s2.select("red").multiply(2.4))
+                    .add(1)
+                )
+                .rename("EVI2")
+            )
+
+  
         scene_count = collection.size().getInfo()
 
         if scene_count == 0:
@@ -143,32 +192,63 @@ def analyze():
         prepared = prepare_landsat(scene)
 
         preview_images = {
-            "ndvi": prepared.select("NDVI").getThumbURL({
-                **vis["ndvi"],
-                "region": square,
-                "dimensions": "256x256",
-                "format": "png"
-            }),
-            "gci": prepared.select("GCI").getThumbURL({
-                **vis["gci"],
-                "region": square,
-                "dimensions": "256x256",
-                "format": "png"
-            }),
-            "ndwi": prepared.select("NDWI").getThumbURL({
-                **vis["ndwi"],
-                "region": square,
-                "dimensions": "256x256",
-                "format": "png"
-            }),
-            "lst": prepared.select("LST_C").getThumbURL({
-                **vis["lst"],
-                "region": square,
-                "dimensions": "256x256",
-                "format": "png"
-            }),
+            "landsat": {
+                "ndvi": prepared.select("NDVI").getThumbURL({
+                    **vis["ndvi"],
+                    "region": square,
+                    "dimensions": "256x256",
+                    "format": "png"
+                }),
+                "gci": prepared.select("GCI").getThumbURL({
+                    **vis["gci"],
+                    "region": square,
+                    "dimensions": "256x256",
+                    "format": "png"
+                }),
+                "ndwi": prepared.select("NDWI").getThumbURL({
+                    **vis["ndwi"],
+                    "region": square,
+                    "dimensions": "256x256",
+                    "format": "png"
+                }),
+                "lst": prepared.select("LST_C").getThumbURL({
+                    **vis["lst"],
+                    "region": square,
+                    "dimensions": "256x256",
+                    "format": "png"
+                }),
+            },
+            "sentinel": {}
         }
 
+        # Generate Sentinel-2 previews only if scenes are available
+        if sentinel_count > 0:
+            preview_images["sentinel"] = {
+                "ndvi": s2_ndvi.getThumbURL({
+                    **vis["ndvi"],
+                    "region": square,
+                    "dimensions": "256x256",
+                    "format": "png"
+                }),
+                "gci": s2_gci.getThumbURL({
+                    **vis["gci"],
+                    "region": square,
+                    "dimensions": "256x256",
+                    "format": "png"
+                }),
+                "ndwi": s2_ndmi.getThumbURL({
+                    **vis["ndwi"],
+                    "region": square,
+                    "dimensions": "256x256",
+                    "format": "png"
+                }),
+                "evi2": s2_evi2.getThumbURL({
+                    **vis["evi2"],
+                    "region": square,
+                    "dimensions": "256x256",
+                    "format": "png"
+                }),
+            }
 
 
         prepared_image = ee.Image(prepared)
@@ -202,6 +282,30 @@ def analyze():
         ).getInfo()
 
         values = {**(raw_values or {}), **(values or {})}
+   
+        tiles = {
+            "true_color": make_tile_url(
+                scene,
+                {
+                    "bands": ["SR_B4", "SR_B3", "SR_B2"],
+                    "min": 7000,
+                    "max": 18000,
+                },
+            ),
+            "ndvi": make_tile_url(prepared.select("NDVI"), vis["ndvi"]),
+            "gci": make_tile_url(prepared.select("GCI"), vis["gci"]),
+            "ndwi": make_tile_url(prepared.select("NDWI"), vis["ndwi"]),
+            "lst": make_tile_url(prepared.select("LST_C"), vis["lst"]),
+            "sentinel_evi2": make_tile_url(s2_evi2, vis["evi2"]
+),
+        }
+
+        if sentinel_count > 0:
+            tiles.update({
+                "sentinel_ndvi": make_tile_url(s2_ndvi, vis["ndvi"]),
+                "sentinel_gci": make_tile_url(s2_gci, vis["gci"]),
+                "sentinel_ndwi": make_tile_url(s2_ndmi, vis["ndwi"]),
+            })
 
         result = {
             "latitude": lat,
@@ -215,21 +319,9 @@ def analyze():
             "pixel_scale_m": 30,
             "values": values,
             "previews": preview_images,
-            "tiles": {
-                "true_color": make_tile_url(
-                    scene,
-                    {
-                        "bands": ["SR_B4", "SR_B3", "SR_B2"],
-                        "min": 7000,
-                        "max": 18000,
-                    },
-                ),
-                "ndvi": make_tile_url(prepared.select("NDVI"), vis["ndvi"]),
-                "gci": make_tile_url(prepared.select("GCI"), vis["gci"]),
-                "ndwi": make_tile_url(prepared.select("NDWI"), vis["ndwi"]),
-                "lst": make_tile_url(prepared.select("LST_C"), vis["lst"])
-            },
+            "tiles": tiles,
         }
+
 
         return jsonify(result)
 
