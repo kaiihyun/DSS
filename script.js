@@ -99,6 +99,7 @@ function displayIndexPreviews(previews) {
     document.getElementById("preview-ndvi").src = previews.ndvi;
     document.getElementById("preview-gci").src = previews.gci;
     document.getElementById("preview-ndwi").src = previews.ndwi;
+    document.getElementById("preview-lst").src = previews.lst;
 }
 
 // Request Landsat analysis from the Flask backend.
@@ -227,3 +228,21 @@ geeLayers.forEach(radio => {
     radio.addEventListener("change", showGEELayer);
 });
 
+
+
+//tapping images to change map layer
+
+document.querySelectorAll(".layer-preview").forEach((image) => {
+    image.addEventListener("click", () => {
+        const layer = image.dataset.layer;
+
+        const radio = document.querySelector(
+            `input[name="gee-layer"][value="${layer}"]`
+        );
+
+        if (radio) {
+            radio.checked = true;
+            radio.dispatchEvent(new Event("change", { bubbles: true }));
+        }
+    });
+});

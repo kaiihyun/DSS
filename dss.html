@@ -24,7 +24,8 @@
 <body>
     <div id="header">
     <h1>Vegetation, Water and Chrolophyll Index</h1>
-    <p>Drag the location marker around.</p>
+    <p>Track which parts of your field are growing well and which parts are drying out.
+ </p>
     </div>
     <div id="map"></div>
 
@@ -32,23 +33,30 @@
     <div id="index-previews">
         <div class="preview-card">
             
-            <img id="preview-ndvi" alt="NDVI vegetation preview">
+            <img id="preview-ndvi" class="layer-preview" data-layer="ndvi" alt="NDVI vegetation preview">
             <h3>NDVI</h3>
             <p>Normalized Difference Vegetation Index</p>
         </div>
 
         <div class="preview-card">
             
-            <img id="preview-gci" alt="GCI chlorophyll preview">
+            <img id="preview-gci" class="layer-preview" data-layer="gci" alt="GCI chlorophyll preview">
             <h3>GCI</h3>
              <p>Green Chlorophyll Index</p>
         </div>
 
         <div class="preview-card">
             
-            <img id="preview-ndwi" alt="NDWI water preview">
+            <img id="preview-ndwi" class="layer-preview" data-layer="ndwi" alt="NDWI water preview">
             <h3>NDWI</h3>
              <p>Normalized Difference Water Index</p>
+        </div>
+
+        <div class="preview-card">
+    
+            <img id="preview-lst" class="layer-preview" data-layer="lst" alt="Land Surface Temperature preview">
+            <h3>LST (°C)</h3>
+            <p>Land Surface Temperature</p>
         </div>
     </div>
 
@@ -65,7 +73,7 @@
 
     
 
-    <label for="gee-layer">Satellite layer:</label>
+   
     <p>Satellite layer:</p>
         <label>
             <input type="radio" name="gee-layer" value="true_color" checked>
@@ -85,6 +93,10 @@
         <label>
             <input type="radio" name="gee-layer" value="gci">
             GCI (Chlorophyll)
+        </label>
+        <label>
+            <input type="radio" name="gee-layer" value="lst">
+            LST
         </label>
         
         

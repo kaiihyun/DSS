@@ -18,7 +18,7 @@ body {
     margin: 0 2em;
     margin-top: 1em;
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 10px;
     width: auto;
     justify-content: center;
@@ -64,4 +64,13 @@ body {
 
 #gee-panel {
     text-align: center;
+}
+
+.layer-preview {
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.layer-preview:hover {
+    transform: scale(1.03);
 }

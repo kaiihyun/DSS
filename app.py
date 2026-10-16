@@ -41,7 +41,7 @@ def prepare_landsat(image):
     ).rename("NDVI")
 
     ndwi = optical.normalizedDifference(
-        ["green", "nir"]
+        ["nir", "swir1"]
     ).rename("NDWI")
 
     gci = (
@@ -82,12 +82,13 @@ def analyze():
 
 
         point = ee.Geometry.Point([lon, lat])
-        square = point.buffer(500).bounds()
+        square = point.buffer(250).bounds()
 
         vis = {
-            "ndvi": {"min": 0.1, "max": 0.8, "palette": ["#d73027", "#f46d43", "#fdae61", "#fee08b", "#ffffbf", "#d9ef8b", "#a6d96a", "#66bd63", "#1a9850"]},
-            "gci": {"min": 0, "max": 1, "palette": ["#77157e", "#873c86", "#a66da7", "#c4a0c5", "#dcdcdb", "#b5d0a9", "#7dbb70", "#46a83c", "#0d8b14"]},
-            "ndwi": {"min": -0.15, "max": 0.15, "palette": ["#e53935", "#ffeb3b", "#055a93"]}
+            "ndvi": {"min": 0.0, "max": 0.7, "palette": ["#d73027", "#f46d43", "#fdae61", "#fee08b", "#ffffbf", "#d9ef8b", "#a6d96a", "#66bd63", "#1a9850"]},
+            "gci": {"min": 0, "max": 0.5, "palette": ["#77157e", "#873c86", "#a66da7", "#c4a0c5", "#dcdcdb", "#b5d0a9", "#7dbb70", "#46a83c", "#0d8b14"]},
+            "ndwi": {"min": 0, "max": 0.2, "palette": ["#e53935", "#ffeb3b", "#055a93"]},
+            "lst": { "min": 20, "max": 35, "palette": ["#313695", "#74add1", "#ffffbf", "#f46d43", "#a50026"]}
         }
 
 
@@ -109,24 +110,24 @@ def analyze():
         if start_date >= end_date:
             raise ValueError(
                 "End date must be later than start date."
-            )
+           )
 
     except (KeyError, TypeError, ValueError) as exc:
         return jsonify({"error": str(exc)}), 400
 
     point = ee.Geometry.Point([lon, lat])
 
-    landsat8 = ee.ImageCollection(
-        "LANDSAT/LC08/C02/T1_L2"
-    )
-    landsat9 = ee.ImageCollection(
-        "LANDSAT/LC09/C02/T1_L2"
-    )
+    landsat8 = ee.ImageCollection("LANDSAT/LC08/C02/T1_L2")
+    landsat9 = ee.ImageCollection("LANDSAT/LC09/C02/T1_L2")
 
     collection = (
         landsat8.merge(landsat9)
         .filterBounds(point)
         .filterDate(start_date, end_date)
+        .filter(ee.Filter.gte("CLOUD_COVER", 0))
+        .filter(ee.Filter.lt("CLOUD_COVER", 20))
+        .filter(ee.Filter.gt("SUN_ELEVATION", 0))
+        .filter(ee.Filter.eq("PROCESSING_LEVEL", "L2SP"))
         .sort("CLOUD_COVER")
     )
 
@@ -135,7 +136,7 @@ def analyze():
 
         if scene_count == 0:
             return jsonify({
-                "error": "No Landsat scenes found for this location and date range."
+                "error": "No daytime Landsat scenes with less than 20% cloud cover and available surface temperature data were found for this location and date range. Try expanding the date range."
             }), 404
 
         scene = ee.Image(collection.first())
@@ -159,7 +160,13 @@ def analyze():
                 "region": square,
                 "dimensions": "256x256",
                 "format": "png"
-            })
+            }),
+            "lst": prepared.select("LST_C").getThumbURL({
+                **vis["lst"],
+                "region": square,
+                "dimensions": "256x256",
+                "format": "png"
+            }),
         }
 
 
@@ -219,8 +226,8 @@ def analyze():
                 ),
                 "ndvi": make_tile_url(prepared.select("NDVI"), vis["ndvi"]),
                 "gci": make_tile_url(prepared.select("GCI"), vis["gci"]),
-                "ndwi": make_tile_url(prepared.select("NDWI"), vis["ndwi"])
-            
+                "ndwi": make_tile_url(prepared.select("NDWI"), vis["ndwi"]),
+                "lst": make_tile_url(prepared.select("LST_C"), vis["lst"])
             },
         }
 
