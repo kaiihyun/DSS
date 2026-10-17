@@ -107,7 +107,7 @@ async function analyzeGEE() {
   const position = currentLoc.getLatLng();
 
   geeAnalyze.disabled = true;
-  geeStatus.textContent = "Searching Landsat scenes...";
+  geeStatus.textContent = "Searching Landsat 8, Landsat 9, and Sentinel-2 scenes...";
   geeResults.replaceChildren();
 
   try {
@@ -206,7 +206,7 @@ function showGEELayer(layer) {
     geeTileLayer = L.tileLayer(tileUrl, {
         opacity: 0.8,
         maxZoom: 18,
-        attribution: "Google Earth Engine / USGS Landsat"
+        attribution: "Google Earth Engine / USGS Landsat 8 and 9 and Sentinel-2"
     }).addTo(map);
 }
 

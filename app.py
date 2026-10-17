@@ -82,7 +82,7 @@ def analyze():
 
 
         point = ee.Geometry.Point([lon, lat])
-        square = point.buffer(375).bounds()
+        square = point.buffer(100).bounds()
 
         vis = {
             "ndvi": {"min": 0.0, "max": 0.7, "palette": ["#d73027", "#f46d43", "#fdae61", "#fee08b", "#ffffbf", "#d9ef8b", "#a6d96a", "#66bd63", "#1a9850"]},
@@ -295,9 +295,7 @@ def analyze():
             "ndvi": make_tile_url(prepared.select("NDVI"), vis["ndvi"]),
             "gci": make_tile_url(prepared.select("GCI"), vis["gci"]),
             "ndwi": make_tile_url(prepared.select("NDWI"), vis["ndwi"]),
-            "lst": make_tile_url(prepared.select("LST_C"), vis["lst"]),
-            "sentinel_evi2": make_tile_url(s2_evi2, vis["evi2"]
-),
+            "lst": make_tile_url(prepared.select("LST_C"), vis["lst"])
         }
 
         if sentinel_count > 0:
@@ -305,6 +303,7 @@ def analyze():
                 "sentinel_ndvi": make_tile_url(s2_ndvi, vis["ndvi"]),
                 "sentinel_gci": make_tile_url(s2_gci, vis["gci"]),
                 "sentinel_ndwi": make_tile_url(s2_ndmi, vis["ndwi"]),
+               "sentinel_evi2": make_tile_url(s2_evi2, vis["evi2"])
             })
 
         result = {
