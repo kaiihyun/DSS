@@ -5,8 +5,8 @@
 }
 
 body {
-    background-color: darkslategray;
-    color: white;
+    background-color: rgb(212, 238, 238);
+    color: rgb(13, 62, 31);
 }
 
 #header {
@@ -48,7 +48,7 @@ body {
     object-fit: contain;
     border: none;
     border-radius: 0.3em;
-    background-color: darkolivegreen;
+    background-color: rgba(188, 198, 203, 0.645);
 }
 
 /* CLICKABLE PREVIEWS */
@@ -69,7 +69,7 @@ body {
 #gee-analyze {
     width: 90%;
     height: 40px;
-    background: lightgreen;
+    background: rgb(108, 189, 68);
     margin: 20px 2em 5px;
 }
 

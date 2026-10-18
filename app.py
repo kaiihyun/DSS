@@ -89,9 +89,8 @@ def analyze():
             "gci": {"min": 0, "max": 0.5, "palette": ["#77157e", "#873c86", "#a66da7", "#c4a0c5", "#dcdcdb", "#b5d0a9", "#7dbb70", "#46a83c", "#0d8b14"]},
             "ndwi": {"min": 0, "max": 0.2, "palette": ["#e53935", "#ffeb3b", "#055a93"]},
             "lst": { "min": 20, "max": 35, "palette": ["#313695", "#74add1", "#ffffbf", "#f46d43", "#a50026"]},
-            "evi2": { "min": 0.0, "max": 0.8,"palette":  ["#d73027", "#f46d43", "#fdae61", "#fee08b", "#ffffbf", "#d9ef8b", "#a6d96a", "#66bd63", "#1a9850"]}
+            "et" : { "min": 0, "max": 100, "palette": [ "#ffffff", "#fcd163", "#99b718", "#66a000", "#3e8601", "#207401", "#056201","#004c00", "#011301"]}
         }
-
 
         if not (-90 <= lat <= 90):
             raise ValueError("Latitude must be between -90 and 90.")
@@ -115,6 +114,7 @@ def analyze():
 
     except (KeyError, TypeError, ValueError) as exc:
         return jsonify({"error": str(exc)}), 400
+
 
     point = ee.Geometry.Point([lon, lat])
 
@@ -141,8 +141,16 @@ def analyze():
         .sort("CLOUDY_PIXEL_PERCENTAGE")
     )
 
+    #MODIS IMAGES
+    modis = (
+            ee.ImageCollection("MODIS/061/MOD16A2GF")
+            .filterBounds(point)
+            .filterDate(start_date, end_date)
+            .sort("system:time_start", False)
+    )    
+
     try: 
-        
+        #get sentinel scenes
         sentinel_count = sentinel.size().getInfo()
 
         if sentinel_count > 0:
@@ -180,10 +188,30 @@ def analyze():
                 .rename("EVI2")
             )
 
-  
-        scene_count = collection.size().getInfo()
 
-        if scene_count == 0:
+        ##get MODIS scenes
+        modis_count = modis.size().getInfo()
+    
+        if modis_count > 0:
+            modis_image = ee.Image(modis.first())
+
+            # Select ET and apply the scale factor.
+            modis_et = (
+                modis_image.select("ET")
+                .multiply(0.1)
+                .rename("ET_mm_8day")
+            )
+
+            modis_pet = (
+                modis_image.select("PET")
+                .multiply(0.1)
+                .rename("PET_mm_8day")
+            )
+
+        #landsat scenese
+        landsat_count = collection.size().getInfo()
+
+        if landsat_count == 0:
             return jsonify({
                 "error": "No daytime Landsat scenes with less than 20% cloud cover and available surface temperature data were found for this location and date range. Try expanding the date range."
             }), 404
@@ -218,7 +246,8 @@ def analyze():
                     "format": "png"
                 }),
             },
-            "sentinel": {}
+            "sentinel": {},
+            "modis": {}
         }
 
         # Generate Sentinel-2 previews only if scenes are available
@@ -243,12 +272,30 @@ def analyze():
                     "format": "png"
                 }),
                 "evi2": s2_evi2.getThumbURL({
-                    **vis["evi2"],
+                    **vis["ndvi"],
                     "region": square,
                     "dimensions": "256x256",
                     "format": "png"
                 }),
             }
+
+        if modis_count > 0:
+            preview_images["modis"] = {
+                "et": modis_et.getThumbURL({
+                    **vis["et"],
+                    "region": square,
+                    "dimensions": "1024x1024",#"256x256",
+                    "format": "png"
+                }),
+
+                "pet": modis_pet.getThumbURL({
+                    **vis["et"],
+                    "region": square,
+                    "dimensions":  "1024x1024",#"256x256",
+                    "format": "png"
+                }),
+            }
+
 
 
         prepared_image = ee.Image(prepared)
@@ -303,7 +350,13 @@ def analyze():
                 "sentinel_ndvi": make_tile_url(s2_ndvi, vis["ndvi"]),
                 "sentinel_gci": make_tile_url(s2_gci, vis["gci"]),
                 "sentinel_ndwi": make_tile_url(s2_ndmi, vis["ndwi"]),
-               "sentinel_evi2": make_tile_url(s2_evi2, vis["evi2"])
+               "sentinel_evi2": make_tile_url(s2_evi2, vis["ndvi"])
+            })
+        
+        if modis_count > 0:
+            tiles.update({
+                "modis_et": make_tile_url(modis_et, vis["et"]),
+                "modis_pet": make_tile_url(modis_pet, vis["et"]),
             })
 
         result = {
@@ -314,7 +367,9 @@ def analyze():
             ).isoformat(),
             "spacecraft": metadata.get("SPACECRAFT_ID"),
             "cloud_cover": metadata.get("CLOUD_COVER"),
-            "scenes_found": scene_count,
+            "landsat_scenes_found": landsat_count,
+            "sentinel2_scenes_found": sentinel_count,
+            "modis_scenes_found": modis_count,
             "pixel_scale_m": 30,
             "values": values,
             "previews": preview_images,

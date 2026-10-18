@@ -133,7 +133,7 @@ async function analyzeGEE() {
     geeLastResult = result;
     displayGEEResults(result);
     displayIndexPreviews(result.previews);
-    showGEELayer("true_color");
+    //showGEELayer("true_color");
 
     geeStatus.textContent =
       `Analysis complete: ${result.date} (${result.spacecraft || "Landsat"})`;
@@ -158,7 +158,9 @@ function displayGEEResults(result) {
     ["Scene cloud cover", result.cloud_cover == null
       ? "Unknown"
       : `${result.cloud_cover}%`],
-    ["Scenes found", result.scenes_found],
+    ["Landsat Scenes found", result.landsat_scenes_found],
+     ["Sentinel Scenes found", result.sentinel2_scenes_found],
+      ["Modis Scenes found", result.modis_scenes_found],
     ["Pixel scale", `${result.pixel_scale_m} m`]
   ];
 
@@ -194,6 +196,7 @@ function displayGEEResults(result) {
 function showGEELayer(layer) {
     if (!geeLastResult || !geeLastResult.tiles[layer]) {
         console.error("Layer not found:", layer);
+        console.log("Available layers:", geeLastResult?.tiles);
         return;
     }
 
@@ -243,6 +246,16 @@ function displayIndexPreviews(previews) {
     document.getElementById("preview-sentinel-evi2").src =
         previews.sentinel?.evi2 || "";
     
+
+    //modis
+    // Sentinel-2 previews
+    const modis = previews.modis || {};
+
+    document.getElementById("preview-modis-et").src =
+        previews.modis?.et || "";
+        
+    document.getElementById("preview-modis-pet").src =
+        previews.modis?.pet || "";
 }
 
 //tapping images to change map layer
