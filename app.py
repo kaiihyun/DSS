@@ -211,11 +211,11 @@ def analyze():
         #landsat scenese
         landsat_count = collection.size().getInfo()
 
-        if landsat_count == 0:
+        if landsat_count == 0 and sentinel_count == 0 and modis_count == 0:
             return jsonify({
-                "error": "No daytime Landsat scenes with less than 20% cloud cover and available surface temperature data were found for this location and date range. Try expanding the date range."
+                "error": "No suitable satellite data was found for this location and date range. Try expanding the date range."
             }), 404
-
+        
         scene = ee.Image(collection.first())
         prepared = prepare_landsat(scene)
 
@@ -330,7 +330,9 @@ def analyze():
 
         values = {**(raw_values or {}), **(values or {})}
    
-        tiles = {
+        tiles = {}
+        if landsat_count > 0:
+            tiles.update({
             "true_color": make_tile_url(
                 scene,
                 {
@@ -343,7 +345,7 @@ def analyze():
             "gci": make_tile_url(prepared.select("GCI"), vis["gci"]),
             "ndwi": make_tile_url(prepared.select("NDWI"), vis["ndwi"]),
             "lst": make_tile_url(prepared.select("LST_C"), vis["lst"])
-        }
+            })
 
         if sentinel_count > 0:
             tiles.update({
