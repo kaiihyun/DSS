@@ -1,17 +1,31 @@
 #map {
-    height: 380px;
-    margin: 0 2em;
-    border-radius: 1em;
+    height: 380px;  margin: 1em 3em; border-radius: 1em;
 }
 
+:root {
+    --navy: #0b1f3a; --blue: #1459c7; --blue-d: #0f46a0; --blue-l: #e8f0fc;
+    --bg: #f7f7ee; --card: #fff; --line: #d3dce8; --ink: #1d2b3d; --mute: #55657a;
+    --ok: #0e6b45; --warn: #8a5a00; --err: #b3261e;
+    --r: 8px; --sh: 0 1px 2px rgba(11,31,58,.06), 0 2px 8px rgba(11,31,58,.04);
+}
+* { box-sizing: border-box; }
 body {
-    background-color: rgb(29, 45, 45);
-    color: rgb(188, 244, 237);
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 15px/1.5 Inter, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
-#header {
-    text-align: center;
-}
+/* HEADER */
+#header { text-align: center; margin: 2em 2em}
+#header h1 { margin: 0; font-size: clamp(1.15rem, 2.4vw, 1.6rem); line-height: 1.2; color: var(--navy); font-weight: 800; letter-spacing: -.01em; }
+#header p { margin: 2px 0 0; color: var(--mute); font-size: .9rem; }
+
+
+main { max-width: 1200px; margin: 0 auto; padding: 20px 16px 48px; display: grid; gap: 20px; }
+.panel { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); box-shadow: var(--sh); padding: 18px 20px; min-width: 0; }
+h2 { margin: 0 0 12px; font-size: 1.05rem; color: var(--navy); font-weight: 700; }
+h2 .sub { margin-left: 8px; font-size: .8rem; font-weight: 400; color: var(--mute); }
+h3, h4 { color: var(--navy); }
+
 
 /* INDEX PREVIEWS */
 #index-previews {
@@ -19,44 +33,28 @@ body {
 }
 
 .source-heading {
-    margin: 16px 0 8px;
-    font-size: 16px;
+    margin: 16px 0 8px; font-size: 16px;
 }
 
 /* PREVIEW GRID */
 .preview-grid {
-    display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 10px;
+    display: grid;  grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px;
 }
-
 .preview-card {
-    min-width: 0;
-    text-align: center;
+    min-width: 0; text-align: center;
 }
-
 .preview-card h3 {
-    margin: 0 0 8px;
-    font-size: 14px;
-    line-height: normal;
+    margin: 0 0 8px; font-size: 14px; line-height: normal;
 }
-
 .preview-card img {
-    display: block;
-    width: 100%;
-    aspect-ratio: 1 / 1;
-    object-fit: contain;
-    border: none;
-    border-radius: 0.3em;
+    display: block;  width: 100%;  aspect-ratio: 1 / 1;  object-fit: contain; border: none; border-radius: 0.3em;
     background-color: rgba(188, 198, 203, 0.645);
 }
 
 /* CLICKABLE PREVIEWS */
 .layer-preview {
-    cursor: pointer;
-    transition: transform 0.2s ease;
+    cursor: pointer; transition: transform 0.2s ease;
 }
-
 .layer-preview:hover {
     transform: scale(1.03);
 }
@@ -67,10 +65,7 @@ body {
 }
 
 #gee-analyze {
-    width: 90%;
-    height: 40px;
-    background: rgb(108, 189, 68);
-    margin: 20px 2em 5px;
+    width: 90%;  height: 40px; background: rgb(108, 189, 68);  margin: 20px 2em 5px;
 }
 
 /* MOBILE */

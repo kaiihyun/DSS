@@ -1,6 +1,3 @@
-
-
-
 from datetime import date, timedelta
 
 import ee
@@ -79,8 +76,6 @@ def analyze():
         lat = float(data["latitude"])
         lon = float(data["longitude"])
 
-
-
         point = ee.Geometry.Point([lon, lat])
         square = point.buffer(100).bounds()
 
@@ -89,7 +84,7 @@ def analyze():
             "gci": {"min": 0, "max": 0.5, "palette": ["#77157e", "#873c86", "#a66da7", "#c4a0c5", "#dcdcdb", "#b5d0a9", "#7dbb70", "#46a83c", "#0d8b14"]},
             "ndwi": {"min": 0, "max": 0.2, "palette": ["#e53935", "#ffeb3b", "#055a93"]},
             "lst": { "min": 20, "max": 35, "palette": ["#313695", "#74add1", "#ffffbf", "#f46d43", "#a50026"]},
-            "et" : { "min": 0, "max": 100, "palette": [ "#ffffff", "#fcd163", "#99b718", "#66a000", "#3e8601", "#207401", "#056201","#004c00", "#011301"]}
+            "et" : { "min": 0, "max": 50, "palette": [ "#ffffff", "#fcd163", "#99b718", "#66a000", "#3e8601", "#207401", "#056201","#004c00", "#011301"]}
         }
 
         if not (-90 <= lat <= 90):
@@ -152,8 +147,8 @@ def analyze():
     try: 
         #get sentinel scenes
         sentinel_count = sentinel.size().getInfo()
-
         if sentinel_count > 0:
+            
             s2_image = ee.Image(sentinel.first())
 
             # Convert surface reflectance to reflectance values

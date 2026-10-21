@@ -23,17 +23,33 @@
 </head>
 <body>
     <div id="header">
-    <h1>Vegetation, Water and Chrolophyll Index</h1>
+    <h1>Aura Farmers</h1>
     <p>Track which parts of your field are growing well and which parts are drying out.
  </p>
     </div>
     <div id="map"></div>
 
-    <!--indices-->
-   <div id="index-previews">
+    <div id="gee-panel">
+        <h2>Landsat Satellite Analysis</h2>
+
+        <p>Selected location: <span id="gee-location">Move the marker</span></p>
+
+        <label for="gee-start">Start date:</label>
+        <input type="date" id="gee-start"><br>
+
+        <label for="gee-end">End date:</label>
+        <input type="date" id="gee-end"><br>
+
+        
+        <button id="gee-analyze">Analyze Location</button>
+         <p id="gee-status">Ready to analyze.</p></div>
+    </div>
+
+       <!--indices-->
+    <div id="index-previews">
 
     <h3 class="source-heading">Landsat 8/9</h3> 
-
+   
     <div class="preview-grid">
         <div class="preview-card">
             <h3>NDVI</h3>
@@ -113,24 +129,8 @@
     </div>
 
     </div>
-    <div id="gee-panel">
-    <h2>Landsat Satellite Analysis</h2>
 
-    <p>Selected location: <span id="gee-location">Move the marker</span></p>
-
-    <label for="gee-start">Start date:</label>
-    <input type="date" id="gee-start"><br>
-
-    <label for="gee-end">End date:</label>
-    <input type="date" id="gee-end"><br>
-
-    
-    <button id="gee-analyze">Analyze Location</button>
-
-    <p id="gee-status">Ready to analyze.</p>
     <div id="gee-results"></div>
-    </div>
-
       <script src="script.js"> </script>
 </body>
 
