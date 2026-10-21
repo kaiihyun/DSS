@@ -1,137 +1,187 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pick Your Plants — Grow smarter from space</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700;900&family=Space+Grotesk:wght@400;700&display=swap">
+  <link rel="stylesheet" href="styles.css">
 
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="styles.css"/>
-    
     <!--leaflet-->
-     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-     crossorigin=""/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""/>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-     crossorigin=""></script>
-    
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""></script>
+
     <!-- Official GEE Client Library for Browsers -->
     <script src="https://ajax.googleapis.com/ajax/libs/googleee/0.1.300/earthengine-api.min.js"></script>
-
-    
-    <title>Document</title>
 </head>
 <body>
-    <div id="header">
-    <h1>Aura Farmers</h1>
-    <p>Track which parts of your field are growing well and which parts are drying out.
- </p>
+
+  <!-- Icon sprite: define once, reuse with <use href="#i-…"> -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="i-arrow" viewBox="0 0 16 16"><path d="M2 8h11M9 4l4 4-4 4"/></symbol>
+    <symbol id="i-leaf" viewBox="0 0 24 24"><path d="M12 21V11C11 5 7 2 1 2c0 6 4 9 11 9M12 12c1-5 4-7 10-7 0 5-3 8-10 7"/></symbol>
+    <symbol id="i-locate" viewBox="0 0 16 16"><circle cx="8" cy="8" r="2.5"/><circle cx="8" cy="8" r="5.5"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2"/></symbol>
+  </svg>
+  <main>
+    <!-- HERO + PLANNER ------------------------------------------------- -->
+    <div class="stage">
+      <header class="hero">
+        <span class="star" style="--x:144px;--y:180px;--s:4px"></span>
+        <span class="star" style="--x:317px;--y:306px;--s:3px"></span>
+        <span class="star" style="--x:101px;--y:575px;--s:4px"></span>
+        <span class="star" style="--x:78%;--y:162px;--s:4px"></span>
+        <span class="star" style="--x:90%;--y:458px;--s:3px"></span>
+        <span class="planet planet--sunset"></span>
+        <span class="planet planet--lagoon"></span>
+ 
+        <div class="hero__inner">
+          <span class="hero__logo"><svg class="icon" style="stroke-width:1.6"><use href="#i-leaf"/></svg></span>
+          <p class="eyebrow">Earth intelligence for every acre</p>
+          <h1 class="hero__title">Grow smarter<br>from space.</h1>
+          <p class="hero__lede">Turn NASA satellite data into clear, colorful signals for healthier crops, wiser watering, and more resilient farms.</p>
+          <a class="btn" href="#planner">Plot your farm
+            <span class="btn__icon"><svg class="icon" width="16" height="16"><use href="#i-arrow"/></svg></span></a>
+        </div>
+      </header>
+ 
+      <section class="planner" id="planner" aria-labelledby="planner-title">
+        <div class="globe" aria-hidden="true">
+          <span class="leaf" style="--x:750px;--y:15px;--w:260px;--r:8deg"></span>
+          <span class="leaf" style="--x:406px;--y:1046px;--w:260px;--r:8deg"></span>
+          <span class="leaf" style="--x:1581px;--y:1103px;--w:260px;--r:148deg"></span>
+          <span class="leaf" style="--x:1300px;--y:254px;--w:190px;--r:-174deg"></span>
+          <span class="cloud" style="--x:1182px;--y:40px;--w:150px"></span>
+          <span class="cloud" style="--x:688px;--y:1128px;--w:150px"></span>
+          <span class="cloud" style="--x:540px;--y:113px;--w:90px"></span>
+        </div>
+ 
+        <div class="card" id="gee-panel">
+          <div>
+            <h2 class="card__title" id="planner-title">Plot your patch of Earth</h2>
+            <p class="card__hint">Drag the marker to your field, then choose its radius and growing window.</p>
+            <p class="card__hint">Selected location: <span id="gee-location">Move the marker</span></p>
+          </div>
+ 
+          <div class="planner__form">
+            <div class="field">
+              <span class="field__label">Farm coordinates</span>
+              <div class="control control--split">
+                <label><span class="control__tag">LAT</span><input name="lat" value="41.8781" inputmode="decimal"></label>
+                <label><span class="control__tag">LNG</span><input name="lng" value="-87.6298" inputmode="decimal"></label>
+                <button class="locate" type="button"><svg class="icon" width="17" height="17"><use href="#i-locate"/></svg>Use my location</button>
+              </div>
+            </div>
+            <label class="field"><span class="field__label">Start date</span>
+              <span class="control"><input type="date" id="gee-start" name="start" value="2025-10-01"></span></label>
+            <label class="field"><span class="field__label">End date</span>
+              <span class="control"><input type="date" id="gee-end" name="end" value="2026-10-01"></span></label>
+            <label class="field"><span class="field__label">Radius <span class="field__value">1.5 km</span></span>
+              <span class="control"><input type="range" name="radius" min="0.5" max="5" step="0.5" value="1.5"></span></label>
+            <button class="btn btn--primary" type="button" id="gee-analyze">Analyze area
+              <span class="btn__icon"><svg class="icon" width="16" height="16"><use href="#i-arrow"/></svg></span></button>
+          </div>
+ 
+          <p class="card__hint" id="gee-status" role="status">Ready to analyze.</p>
+ 
+          <!-- Mount Leaflet (or any map library) into #map -->
+          <div class="map" id="map">
+          </div>
+        </div>
+      </section>
     </div>
-    <div id="map"></div>
-
-    <div id="gee-panel">
-        <h2>Landsat Satellite Analysis</h2>
-
-        <p>Selected location: <span id="gee-location">Move the marker</span></p>
-
-        <label for="gee-start">Start date:</label>
-        <input type="date" id="gee-start"><br>
-
-        <label for="gee-end">End date:</label>
-        <input type="date" id="gee-end"><br>
-
-        
-        <button id="gee-analyze">Analyze Location</button>
-         <p id="gee-status">Ready to analyze.</p></div>
-    </div>
-
-       <!--indices-->
+ 
     <div id="index-previews">
-
-    <h3 class="source-heading">Landsat 8/9</h3> 
+    <!-- LANDSAT -------------------------------------------------------- -->
+    <section class="band band--dark">
+      <div class="container band__head">
+        <div><p class="eyebrow">Landsat 8 + 9 · 30 meter resolution</p><h2 class="band__title source-heading">The long view.</h2></div>
+        <p class="band__lede">Two veteran NASA observatories reveal the deeper rhythms of your soil, water, heat, and plant health.</p>
+      </div>
+      <div class="container preview-grid tiles">
+        <article class="preview-card tile tile--vegetation">
+          <header class="tile__head"><div><h3 class="tile__name">NDVI</h3><p class="tile__desc">Vegetation health</p></div><a class="icon-btn" href="#" aria-label="Open NDVI"><svg class="icon" width="15" height="15"><use href="#i-arrow"/></svg></a></header>
+          <div class="tile__art"><img id="preview-landsat-ndvi" class="layer-preview" data-layer="ndvi" alt="Landsat NDVI"><span class="chip chip--index">01</span><span class="chip chip--value">0.82</span><a class="chip chip--action" href="#map">View on map</a></div>
+        </article>
+        <article class="preview-card tile tile--heat">
+          <header class="tile__head"><div><h3 class="tile__name">LST</h3><p class="tile__desc">Land temperature</p></div><a class="icon-btn" href="#" aria-label="Open LST"><svg class="icon" width="15" height="15"><use href="#i-arrow"/></svg></a></header>
+          <div class="tile__art"><img id="preview-landsat-lst" class="layer-preview" data-layer="lst" alt="Landsat LST"><span class="chip chip--index">02</span><span class="chip chip--value">24.6°C</span><a class="chip chip--action" href="#map">View on map</a></div>
+        </article>
+        <article class="preview-card tile tile--moisture">
+          <header class="tile__head"><div><h3 class="tile__name">NDMI</h3><p class="tile__desc">Canopy moisture</p></div><a class="icon-btn" href="#" aria-label="Open NDMI"><svg class="icon" width="15" height="15"><use href="#i-arrow"/></svg></a></header>
+          <div class="tile__art"><img id="preview-landsat-ndwi" class="layer-preview" data-layer="ndwi" alt="Landsat NDWI"><span class="chip chip--index">03</span><span class="chip chip--value">0.64</span><a class="chip chip--action" href="#map">View on map</a></div>
+        </article>
+        <article class="preview-card tile tile--chlorophyll">
+          <header class="tile__head"><div><h3 class="tile__name">GCI</h3><p class="tile__desc">Chlorophyll index</p></div><a class="icon-btn" href="#" aria-label="Open GCI"><svg class="icon" width="15" height="15"><use href="#i-arrow"/></svg></a></header>
+          <div class="tile__art"><img id="preview-landsat-gci" class="layer-preview" data-layer="gci" alt="Landsat GCI"><span class="chip chip--index">04</span><span class="chip chip--value">3.18</span><a class="chip chip--action" href="#map">View on map</a></div>
+        </article>
+      </div>
+    </section>
+ 
+    <!-- SENTINEL-2 ----------------------------------------------------- -->
+    <section class="band band--mint">
+      <div class="container band__head">
+        <div><p class="eyebrow">Sentinel-2 · 10 meter resolution</p><h2 class="band__title source-heading">Every leaf counts.</h2></div>
+        <p class="band__lede">High-resolution color bands sharpen the picture, so subtle crop differences become clear and actionable.</p>
+      </div>
+      <div class="container preview-grid tiles">
+        <article class="preview-card tile tile--vegetation">
+          <header class="tile__head"><div><h3 class="tile__name">NDVI</h3><p class="tile__desc">Vegetation health</p></div><a class="icon-btn" href="#" aria-label="Open NDVI"><svg class="icon" width="15" height="15"><use href="#i-arrow"/></svg></a></header>
+          <div class="tile__art"><img id="preview-sentinel-ndvi" class="layer-preview" data-layer="sentinel_ndvi" alt="Sentinel-2 NDVI"><span class="chip chip--index">01</span><span class="chip chip--value">0.79</span><a class="chip chip--action" href="#map">View on map</a></div>
+        </article>
+        <article class="preview-card tile tile--evi">
+          <header class="tile__head"><div><h3 class="tile__name">EVI2</h3><p class="tile__desc">Enhanced vegetation</p></div><a class="icon-btn" href="#" aria-label="Open EVI2"><svg class="icon" width="15" height="15"><use href="#i-arrow"/></svg></a></header>
+          <div class="tile__art"><img id="preview-sentinel-evi2" class="layer-preview" data-layer="sentinel_evi2" alt="Sentinel-2 EVI2"><span class="chip chip--index">02</span><span class="chip chip--value">0.71</span><a class="chip chip--action" href="#map">View on map</a></div>
+        </article>
+        <article class="preview-card tile tile--moisture">
+          <header class="tile__head"><div><h3 class="tile__name">NDMI</h3><p class="tile__desc">Canopy moisture</p></div><a class="icon-btn" href="#" aria-label="Open NDMI"><svg class="icon" width="15" height="15"><use href="#i-arrow"/></svg></a></header>
+          <div class="tile__art"><img id="preview-sentinel-ndwi" class="layer-preview" data-layer="sentinel_ndwi" alt="Sentinel-2 NDWI"><span class="chip chip--index">03</span><span class="chip chip--value">0.61</span><a class="chip chip--action" href="#map">View on map</a></div>
+        </article>
+        <article class="preview-card tile tile--chlorophyll">
+          <header class="tile__head"><div><h3 class="tile__name">GCI</h3><p class="tile__desc">Chlorophyll index</p></div><a class="icon-btn" href="#" aria-label="Open GCI"><svg class="icon" width="15" height="15"><use href="#i-arrow"/></svg></a></header>
+          <div class="tile__art"><img id="preview-sentinel-gci" class="layer-preview" data-layer="sentinel_gci" alt="Sentinel-2 GCI"><span class="chip chip--index">04</span><span class="chip chip--value">3.04</span><a class="chip chip--action" href="#map">View on map</a></div>
+        </article>
+      </div>
+    </section>
+ 
+    <!-- MODIS ---------------------------------------------------------- -->
+    <section class="band band--sun">
+      <div class="container band__head">
+        <div><p class="eyebrow">MODIS · Daily global coverage</p><h2 class="band__title source-heading">Follow the water.</h2></div>
+        <p class="band__lede">Track actual and potential evapotranspiration to balance crop demand with every precious drop.</p>
+      </div>
+      <div class="container preview-grid tiles tiles--2">
+        <article class="preview-card tile tile--et">
+          <header class="tile__head"><div><h3 class="tile__name">ET</h3><p class="tile__desc">Actual evapotranspiration</p></div><a class="icon-btn" href="#" aria-label="Open ET"><svg class="icon" width="15" height="15"><use href="#i-arrow"/></svg></a></header>
+          <div class="tile__art"><img id="preview-modis-et" class="layer-preview" data-layer="modis_et" alt="Modis Evapotranspiration"><span class="chip chip--index">01</span><span class="chip chip--value">4.8 mm</span><a class="chip chip--action" href="#map">View on map</a></div>
+        </article>
+        <article class="preview-card tile tile--pet">
+          <header class="tile__head"><div><h3 class="tile__name">PET</h3><p class="tile__desc">Potential evapotranspiration</p></div><a class="icon-btn" href="#" aria-label="Open PET"><svg class="icon" width="15" height="15"><use href="#i-arrow"/></svg></a></header>
+          <div class="tile__art"><img id="preview-modis-pet" class="layer-preview" data-layer="modis_pet" alt="Modis Potential Evapotranspiration"><span class="chip chip--index">02</span><span class="chip chip--value">5.6 mm</span><a class="chip chip--action" href="#map">View on map</a></div>
+        </article>
+      </div>
+    </section>
+    </div>
+ 
    
-    <div class="preview-grid">
-        <div class="preview-card">
-            <h3>NDVI</h3>
-            <img id="preview-landsat-ndvi" class="layer-preview"
-                 data-layer="ndvi" alt="Landsat NDVI">
-        </div>
+  </main>
 
-         <div class="preview-card">
-            <h3>LST (°C)</h3>
-            <img id="preview-landsat-lst" class="layer-preview"
-                 data-layer="lst" alt="Landsat LST">
-        </div>
-
-        <div class="preview-card">
-            <h3>NDMI</h3>
-            <img id="preview-landsat-ndwi" class="layer-preview"
-                 data-layer="ndwi" alt="Landsat NDWI">
-        </div>
-
-        <div class="preview-card">
-            <h3>GCI</h3>
-            <img id="preview-landsat-gci" class="layer-preview"
-                 data-layer="gci" alt="Landsat GCI">
-        </div>
-
-       
+  <!-- CLOSING + FOOTER -------------------------------------------------- -->
+  <footer class="closing">
+    <p class="eyebrow">Powered by open Earth observation</p>
+    <h2 class="closing__title">Better signals.<br>Stronger harvests.</h2>
+    <div class="footer">
+      <a class="footer__brand" href="#"><span class="footer__mark"><svg class="icon"><use href="#i-leaf"/></svg></span>Pick Your Plants</a>
+      <p>Satellite insight for the people<br>who grow our world.</p>
+      <p class="footer__sources">Data sources<br>NASA · ESA · USGS</p>
     </div>
-
-    <h3 class="source-heading">Sentinel-2</h3>
-
-    <div class="preview-grid">
-        <div class="preview-card">
-            <h3>NDVI</h3>
-            <img id="preview-sentinel-ndvi" class="layer-preview"
-                 data-layer="sentinel_ndvi" alt="Sentinel-2 NDVI">
-        </div>
-
-        <div class="preview-card">
-            <h3>EVI2</h3>
-            <img
-                id="preview-sentinel-evi2"
-                class="layer-preview"
-                data-layer="sentinel_evi2"
-                alt="Sentinel-2 EVI2" >
-        </div>
-        
-        <div class="preview-card">
-            <h3>NDMI</h3>
-            <img id="preview-sentinel-ndwi" class="layer-preview"
-                 data-layer="sentinel_ndwi" alt="Sentinel-2 NDWI">
-        </div>
-
-        <div class="preview-card">
-            <h3>GCI</h3>
-            <img id="preview-sentinel-gci" class="layer-preview"
-                 data-layer="sentinel_gci" alt="Sentinel-2 GCI">
-        </div>
-
-       
-
-    </div>
-    
-    <h3 class="source-heading">MODIS (Terra Satellite)</h3>
-    <div class="preview-grid">
-         <div class="preview-card">
-            <h3>ET</h3>
-            <img id="preview-modis-et" class="layer-preview"
-                 data-layer="modis_et" alt="Modis Evapotranspiration">
-        </div>
-
-         <div class="preview-card">
-            <h3>PET</h3>
-            <img id="preview-modis-pet" class="layer-preview"
-                 data-layer="modis_pet" alt="Modis Potential Evapotranspiration">
-        </div>
-
-    </div>
-
-    </div>
-
-    <div id="gee-results"></div>
-      <script src="script.js"> </script>
+  </footer>
+   <script src="script.js"> </script>
 </body>
-
 </html>

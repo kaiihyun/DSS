@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css"/>
+    
+    <!--leaflet-->
+     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+     crossorigin=""/>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+     crossorigin=""></script>
+    
+    <!-- Official GEE Client Library for Browsers -->
+    <script src="https://ajax.googleapis.com/ajax/libs/googleee/0.1.300/earthengine-api.min.js"></script>
+
+    
+    <title>Document</title>
+</head>
+<body>
+    <div id="header">
+    <h1>Aura Farmers</h1>
+    <p>Track which parts of your field are growing well and which parts are drying out.
+ </p>
+    </div>
+    <div id="map"></div>
+
+
+    
+    <div id="gee-panel">
+        <p>Selected location: <span id="gee-location">Move the marker</span></p>
+
+        <label for="gee-start">Start date:</label>
+        <input type="date" id="gee-start"><br>
+
+        <label for="gee-end">End date:</label>
+        <input type="date" id="gee-end"><br>
+
+        
+        <button id="gee-analyze">Analyze Location</button>
+         <p id="gee-status">Ready to analyze.</p></div>
+    </div>
+
+       <!--indices-->
+    <div id="index-previews">
+
+    <h3 class="source-heading">Landsat 8/9</h3> 
+   
+    <div class="preview-grid">
+        <div class="preview-card">
+            <h3>NDVI</h3>
+            <img id="preview-landsat-ndvi" class="layer-preview"
+                 data-layer="ndvi" alt="Landsat NDVI">
+        </div>
+
+         <div class="preview-card">
+            <h3>LST (°C)</h3>
+            <img id="preview-landsat-lst" class="layer-preview"
+                 data-layer="lst" alt="Landsat LST">
+        </div>
+
+        <div class="preview-card">
+            <h3>NDMI</h3>
+            <img id="preview-landsat-ndwi" class="layer-preview"
+                 data-layer="ndwi" alt="Landsat NDWI">
+        </div>
+
+        <div class="preview-card">
+            <h3>GCI</h3>
+            <img id="preview-landsat-gci" class="layer-preview"
+                 data-layer="gci" alt="Landsat GCI">
+        </div>
+
+       
+    </div>
+
+    <h3 class="source-heading">Sentinel-2</h3>
+
+    <div class="preview-grid">
+        <div class="preview-card">
+            <h3>NDVI</h3>
+            <img id="preview-sentinel-ndvi" class="layer-preview"
+                 data-layer="sentinel_ndvi" alt="Sentinel-2 NDVI">
+        </div>
+
+        <div class="preview-card">
+            <h3>EVI2</h3>
+            <img
+                id="preview-sentinel-evi2"
+                class="layer-preview"
+                data-layer="sentinel_evi2"
+                alt="Sentinel-2 EVI2" >
+        </div>
+        
+        <div class="preview-card">
+            <h3>NDMI</h3>
+            <img id="preview-sentinel-ndwi" class="layer-preview"
+                 data-layer="sentinel_ndwi" alt="Sentinel-2 NDWI">
+        </div>
+
+        <div class="preview-card">
+            <h3>GCI</h3>
+            <img id="preview-sentinel-gci" class="layer-preview"
+                 data-layer="sentinel_gci" alt="Sentinel-2 GCI">
+        </div>
+
+       
+
+    </div>
+    
+    <h3 class="source-heading">MODIS (Terra Satellite)</h3>
+    <div class="preview-grid">
+         <div class="preview-card">
+            <h3>ET</h3>
+            <img id="preview-modis-et" class="layer-preview"
+                 data-layer="modis_et" alt="Modis Evapotranspiration">
+        </div>
+
+         <div class="preview-card">
+            <h3>PET</h3>
+            <img id="preview-modis-pet" class="layer-preview"
+                 data-layer="modis_pet" alt="Modis Potential Evapotranspiration">
+        </div>
+
+    </div>
+
+    </div>
+
+    <div id="gee-results"></div>
+      <script src="script.js"> </script>
+</body>
+
+</html>

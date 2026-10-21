@@ -83,7 +83,7 @@ let geeStart = document.getElementById("gee-start");
 let geeEnd = document.getElementById("gee-end");
 const geeAnalyze = document.getElementById("gee-analyze");
 let geeStatus = document.getElementById("gee-status");
-let geeResults = document.getElementById("gee-results");
+//let geeResults = document.getElementById("gee-results");
 
 // Display the marker's current coordinates.
 function updateGEECoordinates() {
@@ -108,7 +108,7 @@ async function analyzeGEE() {
 
   geeAnalyze.disabled = true;
   geeStatus.textContent = "Searching Landsat 8, Landsat 9, and Sentinel-2 scenes...";
-  geeResults.replaceChildren();
+//  geeResults.replaceChildren();
 
   try {
     const response = await fetch(GEE_API, {
@@ -131,9 +131,9 @@ async function analyzeGEE() {
     }
 
     geeLastResult = result;
-    displayGEEResults(result);
+    //displayGEEResults(result);
     displayIndexPreviews(result.previews);
-    //showGEELayer("true_color");
+    showGEELayer("true_color");
 
     geeStatus.textContent =
       `Analysis complete: ${result.date} (${result.spacecraft || "Landsat"})`;
