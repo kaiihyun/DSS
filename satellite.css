@@ -1,0 +1,193 @@
+/* =====================================================================
+   satellite.css  -  load AFTER styles.css
+   Built on the tokens in your styles.css (--color-*, --font-*, --space-*).
+   Adds: hovering hero satellite, space loading screen, results view.
+   All new classes are prefixed (sat-, ld-, hero-sat, results-).
+   ===================================================================== */
+:root {
+    /* aliases onto your palette */
+    --sx-navy:   var(--color-ink);
+    --sx-deep:   var(--color-navy);
+    --sx-lagoon: var(--color-mint);
+    --sx-mint:   var(--color-cream);
+    --sx-sunset: var(--color-coral);
+    --sx-sun:    var(--color-sun);
+    --sx-leaf:   #35b66d;           /* same green as your .leaf shapes */
+}
+
+/* ---------- satellite artwork ---------- */
+.sat-body      { fill: var(--sx-mint);   stroke: var(--sx-navy); stroke-width: 3; }
+.sat-band      { fill: var(--sx-lagoon); }
+.sat-window    { fill: var(--sx-navy);   stroke: var(--sx-sun); stroke-width: 2; }
+.sat-strut     { fill: var(--sx-mint);   stroke: var(--sx-navy); stroke-width: 2; }
+.sat-panel     { fill: url(#sat-panel-grad); }
+.sat-grid      { stroke: var(--sx-mint); stroke-width: 1.5; opacity: .55; fill: none; }
+.sat-frame     { fill: none; stroke: var(--sx-mint); stroke-width: 3; opacity: .9; }
+.sat-dish      { fill: var(--color-pink); stroke: var(--sx-navy); stroke-width: 3; }
+.sat-led       { fill: var(--sx-sun); animation: sat-blink 1.6s ease-in-out infinite; }
+.sat-lens-base { fill: var(--sx-navy); stroke: var(--sx-mint); stroke-width: 2; }
+.sat-lens      { fill: var(--sx-sunset); }
+.sat-stop-a    { stop-color: var(--sx-lagoon); }
+.sat-stop-b    { stop-color: #14859a; }
+
+@keyframes sat-blink { 0%,100% { opacity: 1; } 50% { opacity: .2; } }
+@keyframes sat-hover {
+    0%,100% { transform: translateY(-14px) rotate(-1.5deg); }
+    50%     { transform: translateY(14px)  rotate(1.5deg); }
+}
+
+/* ---------- giant hero satellite (sits inside .hero__inner flex column) ---------- */
+.hero-sat {
+    width: min(420px, 78vw);
+    height: auto;
+    flex: none;
+    animation: sat-hover 4.5s ease-in-out infinite;
+    filter: drop-shadow(0 22px 24px rgb(1 8 20 / .4));
+}
+
+/* ---------- loading screen ---------- */
+#loading-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    overflow: hidden;
+    color: var(--text-on-dark);
+    font-family: var(--font-display);
+    background: radial-gradient(ellipse 90% 70% at 50% 100%, #0f3150 0%, var(--color-navy) 55%, var(--color-ink) 100%);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity .5s ease, visibility .5s;
+}
+#loading-screen.show { opacity: 1; visibility: visible; }
+
+.ld-stars { position: absolute; inset: 0; }
+.ld-star {
+    position: absolute;
+    border-radius: 50%;
+    background: var(--color-cream);
+    animation: sat-twinkle 3s ease-in-out infinite;
+}
+@keyframes sat-twinkle { 0%,100% { opacity: .15; } 50% { opacity: .95; } }
+
+.ld-stage {
+    position: absolute;
+    top: 5vh;
+    left: 50%;
+    width: min(340px, 72vw);
+    transform: translateX(-50%);
+    z-index: 3;
+}
+.ld-sat  { width: 100%; height: auto; animation: sat-hover 4.5s ease-in-out infinite; }
+.ld-beam {
+    position: absolute;
+    top: 80%;
+    left: 50%;
+    width: min(70vh, 120vw);
+    height: 52vh;
+    margin-left: calc(min(70vh, 120vw) / -2);
+    transform-origin: 50% 0;
+    background: linear-gradient(to bottom, rgb(255 207 74 / .6), rgb(69 223 176 / .05));
+    clip-path: polygon(49% 0, 51% 0, 100% 100%, 0 100%);
+    mix-blend-mode: screen;
+    animation: sat-sweep 3.2s ease-in-out infinite alternate;
+}
+@keyframes sat-sweep { from { transform: rotate(-14deg); } to { transform: rotate(14deg); } }
+
+.ld-text {
+    position: absolute;
+    top: 50%; left: 0; right: 0;
+    transform: translateY(-50%);
+    text-align: center;
+    z-index: 4;
+    padding: 0 var(--space-4);
+}
+.ld-text h2 {
+    margin-bottom: var(--space-2);
+    font-weight: 700;
+    font-size: clamp(2rem, 6vw, 4rem);
+    line-height: .95;
+    letter-spacing: var(--tracking-tight);
+}
+.ld-text p { color: var(--text-muted-dark); font-family: var(--font-body); }
+.ld-text p::after {
+    content: "";
+    display: inline-block;
+    width: 1.3em;
+    text-align: left;
+    animation: sat-dots 1.4s steps(4) infinite;
+}
+@keyframes sat-dots { 0% { content: ""; } 25% { content: "."; } 50% { content: ".."; } 75% { content: "..."; } }
+
+.ld-globe  { position: absolute; left: 0; bottom: 0; width: 100%; height: 80vh; z-index: 1; }
+.ld-land   { fill: var(--sx-leaf); opacity: .92; }
+.ld-scroll { animation: sat-spin 45s linear infinite; }
+@keyframes sat-spin { from { transform: translateX(0); } to { transform: translateX(-1000px); } }
+.ld-ring {
+    fill: none;
+    stroke: var(--color-cream);
+    stroke-width: 3;
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: sat-ring 2.4s ease-out infinite;
+}
+@keyframes sat-ring { from { transform: scale(.3); opacity: .9; } to { transform: scale(1.2); opacity: 0; } }
+
+/* ---------- results bar ---------- */
+#results-bar {
+    display: none;
+    align-items: center;
+    gap: var(--space-4);
+    padding: var(--space-3) var(--gutter);
+    background: var(--color-ink);
+    border-bottom: 1px solid var(--line-dark);
+}
+#results-bar h2 {
+    flex: 1;
+    font-family: var(--font-display);
+    font-size: var(--fs-h3);
+    font-weight: 700;
+}
+.results-sat { width: 84px; height: auto; flex: none; animation: sat-hover 4.5s ease-in-out infinite; }
+
+/* ---------- two views ---------- */
+body.view-home    #index-previews { display: none; }
+body.view-results #results-bar    { display: flex; }
+body.view-results .hero           { display: none; }
+
+/* The giant globe is absolutely positioned and was spilling over the bar and
+   the bands once the hero is gone, so contain it inside the stage. */
+body.view-results .stage { overflow: hidden; }
+body.view-results .globe { top: 24px; }
+body.view-results .planner { padding-block: 48px 64px; }
+
+/* inputs on the left, giant map on the right */
+body.view-results .planner .card {
+    display: grid;
+    grid-template-columns: minmax(260px, 340px) minmax(0, 1fr);
+    gap: var(--space-5);
+    align-items: start;
+    width: min(100%, 1500px);
+}
+body.view-results .planner .card > .map { grid-column: 2; grid-row: 1 / span 3; }
+body.view-results .planner .card > :not(.map) { grid-column: 1; }
+body.view-results .planner__form { grid-template-columns: 1fr; }   /* your 5-column form is too wide for the side column */
+body.view-results .planner__form > :first-child,
+body.view-results .planner__form > .btn { grid-column: auto; }
+body.view-results .map { height: 76vh; min-height: 460px; }
+
+@media (max-width: 900px) {
+    body.view-results .planner .card { grid-template-columns: minmax(0, 1fr); }
+    body.view-results .planner .card > .map,
+    body.view-results .planner .card > :not(.map) { grid-column: 1; grid-row: auto; }
+    body.view-results .planner__form { grid-template-columns: 1fr 1fr; }
+    body.view-results .planner__form > :first-child,
+    body.view-results .planner__form > .btn { grid-column: 1 / -1; }
+    body.view-results .map { height: 60vh; min-height: 380px; }
+}
+@media (max-width: 640px) {
+    body.view-results .planner__form { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .hero-sat, .results-sat, .ld-sat, .ld-beam, .ld-scroll, .ld-ring, .ld-star, .sat-led { animation: none; }
+}

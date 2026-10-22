@@ -1,5 +1,4 @@
-
- //LEAFLET MAP
+//LEAFLET MAP
 var map = L.map('map').setView([51.505, -0.09], 13);
         
 L.tileLayer('https://api.maptiler.com/maps/outdoor-v4/{z}/{x}/{y}.png?key=RYHVbyF322OxTHbWxkAi',
@@ -34,7 +33,7 @@ function success(pos){
         map.removeLayer(currentLoc);
     }
     //add circle
-    updateCircle;
+    updateCircle(lat, long, farmrange.value);   // FIX: was "updateCircle;" (never called, so circle was undefined)
 
     //set the loc marker and circle
     currentLoc = L.marker([lat,long], {draggable: true})
@@ -127,6 +126,80 @@ let geeStatus = document.getElementById("gee-status");
 //let geeResults = document.getElementById("gee-results");
 
 
+/* ============================================================
+   DESIGN LAYER: loading screen + home/results views
+   (no change to the analysis logic)
+   ============================================================ */
+const loadingScreen = document.getElementById("loading-screen");
+const loadingStatus = document.getElementById("loading-status");
+
+const LOADING_MESSAGES = [
+  "Contacting satellites",
+  "Searching Landsat 8 and 9 scenes",
+  "Searching Sentinel-2 scenes",
+  "Checking MODIS evapotranspiration",
+  "Rendering index maps"
+];
+const MIN_LOADING_MS = 2500;   // keep the scan on screen long enough to feel intentional
+let loadingTimer = null;
+
+// twinkling stars for the loading screen
+(function makeStars() {
+  const box = document.getElementById("ld-stars");
+  for (let i = 0; i < 70; i++) {
+    const s = document.createElement("span");
+    const size = Math.random() * 2.2 + 0.8;
+    s.className = "ld-star";
+    s.style.width = s.style.height = `${size}px`;
+    s.style.left = `${Math.random() * 100}%`;
+    s.style.top = `${Math.random() * 70}%`;
+    s.style.animationDelay = `${Math.random() * 3}s`;
+    s.style.animationDuration = `${2 + Math.random() * 3}s`;
+    box.appendChild(s);
+  }
+})();
+
+function showLoading() {
+  let i = 0;
+  loadingStatus.textContent = LOADING_MESSAGES[0];
+  loadingScreen.classList.add("show");
+  loadingScreen.setAttribute("aria-hidden", "false");
+  clearInterval(loadingTimer);
+  loadingTimer = setInterval(() => {
+    i = Math.min(i + 1, LOADING_MESSAGES.length - 1);
+    loadingStatus.textContent = LOADING_MESSAGES[i];
+  }, 2200);
+}
+
+function hideLoading() {
+  clearInterval(loadingTimer);
+  loadingScreen.classList.remove("show");
+  loadingScreen.setAttribute("aria-hidden", "true");
+}
+
+// Leaflet must be told when its container changes size.
+function refreshMap() {
+  setTimeout(() => {
+    map.invalidateSize();
+    if (currentLoc) map.setView(currentLoc.getLatLng(), map.getZoom());
+  }, 150);
+}
+
+function showResultsPage() {
+  document.body.classList.replace("view-home", "view-results");
+  window.scrollTo(0, 0);
+  refreshMap();
+}
+
+function showHomePage() {
+  document.body.classList.replace("view-results", "view-home");
+  window.scrollTo(0, 0);
+  refreshMap();
+}
+
+document.getElementById("back-home").addEventListener("click", showHomePage);
+
+
 // Request Landsat analysis from the Flask backend.
 async function analyzeGEE() {
     
@@ -141,6 +214,9 @@ async function analyzeGEE() {
   geeAnalyze.disabled = true;
   geeStatus.textContent = "Searching Landsat 8, Landsat 9, and Sentinel-2 scenes...";
 //  geeResults.replaceChildren();
+
+  const startedAt = Date.now();
+  showLoading();
 
   try {
     const response = await fetch(GEE_API, {
@@ -171,10 +247,16 @@ async function analyzeGEE() {
     geeStatus.textContent =
       `Analysis complete: ${result.date} (${result.spacecraft || "Landsat"})`;
 
+    const wait = MIN_LOADING_MS - (Date.now() - startedAt);
+    if (wait > 0) await new Promise((r) => setTimeout(r, wait));
+
+    showResultsPage();
+
   } catch (error) {
     console.error("Earth Engine error:", error);
     geeStatus.textContent = `Error: ${error.message}`;
   } finally {
+    hideLoading();
     geeAnalyze.disabled = false;
   }
 }
@@ -296,5 +378,7 @@ function displayIndexPreviews(previews) {
 document.querySelectorAll(".layer-preview").forEach((image) => {
     image.addEventListener("click", () => {
         showGEELayer(image.dataset.layer);
+        // bring the giant map back into view so the overlay is visible
+        document.getElementById("map").scrollIntoView({ behavior: "smooth", block: "center" });
     });
 });
