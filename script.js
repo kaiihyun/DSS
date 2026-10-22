@@ -10,18 +10,31 @@ L.tileLayer('https://api.maptiler.com/maps/outdoor-v4/{z}/{x}/{y}.png?key=RYHVby
 navigator.geolocation.getCurrentPosition(success, error);
 
 let currentLoc, circle, zoomLevel;
+let long, lat;
+let farmrange = document.getElementById("farmrange")
 
+function updateCircle(latv, longv, rad) {
+    if (circle){map.removeLayer(circle);}
+    //no dupes circle
+    circle = L.circle([lat,long
+    ], {radius: farmrange.value}).addTo(map);
+}
 function success(pos){
-    const lat = pos.coords.latitude;
-    const long = pos.coords.longitude;
+    lat = pos.coords.latitude;
+    long = pos.coords.longitude;
     const acc = pos.coords.accuracy;
+    const latInput = document.getElementById("lat");
+    const longInput = document.getElementById("long");
+
+    latInput.value = lat.toFixed(5)
+    longInput.value = long.toFixed(5)
 
     // one markers only
    if (currentLoc) {
         map.removeLayer(currentLoc);
     }
-
-    
+    //add circle
+    updateCircle;
 
     //set the loc marker and circle
     currentLoc = L.marker([lat,long], {draggable: true})
@@ -32,26 +45,46 @@ function success(pos){
     //goto the user coords coords
     map.setView([lat, long], 16);
 
-    circle = L.circle([lat,long], {radius: acc}).addTo(map);
+    
     
     //after dragging the loc marker
     currentLoc.on('dragend', function () {
-        const position = currentLoc.getLatLng();
-        const newLat = position.lat;
-        const newLong = position.lng;
-
         currentLoc.bindPopup(
-            "Moved to: " + newLat.toFixed(5) + ", " + newLong.toFixed(5)
+            "Moved"
         ).openPopup();
-
-         //UPDATEEEEEEEE GEEE
-        updateGEECoordinates();
         
     });
     //circle follow the marker when dragging
     currentLoc.on('drag', function () {
         circle.setLatLng(currentLoc.getLatLng());
+        
+        const position = currentLoc.getLatLng();
+        lat = position.lat;
+        long = position.lng;
+        //change lat ang long values 
+        latInput.value = position.lat.toFixed(5)
+        longInput.value = position.lng.toFixed(5)
+
+
+        updateCircle(position.lat,position.lng, farmrange.value);
+        //circle = L.circle([position.lat,position.lng], {radius: farmrange.value}).addTo(map);
+
+
+
     });
+
+     // every change of range val
+    farmrange.addEventListener('input', function(event) {
+        // Access the current value using event.target.value
+        let rangevalue = document.getElementById("rangevalue");
+        rangevalue.textContent = event.target.value + " m";
+
+        updateCircle(lat, long, farmrange.value);
+        
+    });
+
+
+
     
     //doesnt change zoom
     if(!zoomLevel){
@@ -60,7 +93,6 @@ function success(pos){
 
    
 }
-
 function error(err) {
     if(err.code === 1){
         alert("Please allow geolocation access.")
@@ -68,6 +100,15 @@ function error(err) {
         alert("Cannot get location.")
     }
 }
+
+
+
+
+
+
+
+
+
 
 
 
@@ -84,15 +125,6 @@ let geeEnd = document.getElementById("gee-end");
 const geeAnalyze = document.getElementById("gee-analyze");
 let geeStatus = document.getElementById("gee-status");
 //let geeResults = document.getElementById("gee-results");
-
-// Display the marker's current coordinates.
-function updateGEECoordinates() {
-  const position = currentLoc.getLatLng();
-
-  geeLocation = document.getElementById("gee-location");
-  geeLocation.textContent = `${position.lat.toFixed(6)}, ${position.lng.toFixed(6)}`;
-}
-
 
 
 // Request Landsat analysis from the Flask backend.
@@ -119,6 +151,7 @@ async function analyzeGEE() {
       body: JSON.stringify({
         latitude: position.lat,
         longitude: position.lng,
+        range: farmrange.value,
         start_date: geeStart.value || undefined,
         end_date: geeEnd.value || undefined
       })

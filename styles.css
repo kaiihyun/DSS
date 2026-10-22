@@ -178,7 +178,7 @@ svg { display: block; }
 .field__label { font-size: 11px; font-weight: 700; letter-spacing: .12em;
                 text-transform: uppercase; color: var(--text-on-light);
                 display: flex; justify-content: space-between; }
-.field__value { color: var(--color-mint-deep); font-weight: 900; }
+.field__value { color: var(--color-cream); font-weight: 900; }
 .control {
   display: flex; align-items: center; gap: var(--space-3);
   height: 60px; padding-inline: var(--space-4);

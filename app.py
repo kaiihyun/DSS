@@ -75,9 +75,11 @@ def analyze():
 
         lat = float(data["latitude"])
         lon = float(data["longitude"])
+        range = float(data["range"])
+        
 
         point = ee.Geometry.Point([lon, lat])
-        square = point.buffer(100).bounds()
+        square = point.buffer(250).bounds()
 
         vis = {
             "ndvi": {"min": 0.0, "max": 0.7, "palette": ["#d73027", "#f46d43", "#fdae61", "#fee08b", "#ffffbf", "#d9ef8b", "#a6d96a", "#66bd63", "#1a9850"]},
