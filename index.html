@@ -7,7 +7,11 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700;900&family=Space+Grotesk:wght@400;700&display=swap">
+  <link href="https://fonts.googleapis.com/css2?family=Odibee+Sans&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://www.fontspace.com/interform-2-font-f147622">
   <link rel="stylesheet" href="styles.css">
+  <!-- NEW: satellite, loading screen and results-view styles (keep after styles.css) -->
+  <link rel="stylesheet" href="satellite.css">
 
     <!--leaflet-->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
@@ -21,7 +25,7 @@
     <!-- Official GEE Client Library for Browsers -->
     <script src="https://ajax.googleapis.com/ajax/libs/googleee/0.1.300/earthengine-api.min.js"></script>
 </head>
-<body>
+<body class="view-home">
 
   <!-- Icon sprite: define once, reuse with <use href="#i-…"> -->
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -29,6 +33,96 @@
     <symbol id="i-leaf" viewBox="0 0 24 24"><path d="M12 21V11C11 5 7 2 1 2c0 6 4 9 11 9M12 12c1-5 4-7 10-7 0 5-3 8-10 7"/></symbol>
     <symbol id="i-locate" viewBox="0 0 16 16"><circle cx="8" cy="8" r="2.5"/><circle cx="8" cy="8" r="5.5"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2"/></symbol>
   </svg>
+
+  <!-- NEW: satellite artwork, defined once and reused (hero, loading, results bar) -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <linearGradient id="sat-panel-grad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" class="sat-stop-a"/>
+        <stop offset="1" class="sat-stop-b"/>
+      </linearGradient>
+    </defs>
+    <symbol id="satellite" viewBox="0 0 400 240">
+      <rect class="sat-strut" x="150" y="116" width="30" height="8"/>
+      <rect class="sat-strut" x="220" y="116" width="30" height="8"/>
+      <g>
+        <rect class="sat-panel" x="8" y="78" width="142" height="84" rx="4"/>
+        <path class="sat-grid" d="M43.5 78v84M79 78v84M114.5 78v84M8 106h142M8 134h142"/>
+        <rect class="sat-frame" x="8" y="78" width="142" height="84" rx="4"/>
+      </g>
+      <g>
+        <rect class="sat-panel" x="250" y="78" width="142" height="84" rx="4"/>
+        <path class="sat-grid" d="M285.5 78v84M321 78v84M356.5 78v84M250 106h142M250 134h142"/>
+        <rect class="sat-frame" x="250" y="78" width="142" height="84" rx="4"/>
+      </g>
+      <rect class="sat-strut" x="198" y="38" width="4" height="30"/>
+      <path class="sat-dish" d="M172 40 Q200 14 228 40 Q200 30 172 40Z"/>
+      <circle class="sat-led" cx="200" cy="34" r="4"/>
+      <rect class="sat-body" x="168" y="64" width="64" height="112" rx="14"/>
+      <rect class="sat-band" x="168" y="96" width="64" height="12"/>
+      <rect class="sat-band" x="168" y="132" width="64" height="12"/>
+      <circle class="sat-window" cx="200" cy="120" r="7"/>
+      <path class="sat-lens-base" d="M184 176 H216 L210 192 H190Z"/>
+      <ellipse class="sat-lens" cx="200" cy="194" rx="11" ry="5"/>
+    </symbol>
+  </svg>
+
+  <!-- NEW: LOADING SCREEN (shown while "Analyze area" is running) -->
+  <div id="loading-screen" aria-live="polite" aria-hidden="true">
+    <div class="ld-stars" id="ld-stars"></div>
+
+    <div class="ld-stage">
+      <svg class="ld-sat" viewBox="0 0 400 240" role="img" aria-label="Satellite scanning"><use href="#satellite"/></svg>
+      <div class="ld-beam"></div>
+    </div>
+
+    <div class="ld-text">
+      <h2>Scanning your field</h2>
+      <p id="loading-status">Contacting satellites</p>
+    </div>
+
+    <svg class="ld-globe" viewBox="0 0 1000 520" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+      <defs>
+        <clipPath id="ld-clip"><circle cx="500" cy="1100" r="900"/></clipPath>
+        <radialGradient id="ld-ocean" cx="50%" cy="0%" r="100%">
+          <stop offset="0" stop-color="#47c7d1"/>
+          <stop offset="0.45" stop-color="#1687bb"/>
+          <stop offset="1" stop-color="#0a1d34"/>
+        </radialGradient>
+        <radialGradient id="ld-atmo" cx="50%" cy="50%" r="50%">
+          <stop offset="0.9" stop-color="rgba(69,223,176,0)"/>
+          <stop offset="0.96" stop-color="rgba(69,223,176,.55)"/>
+          <stop offset="1" stop-color="rgba(69,223,176,0)"/>
+        </radialGradient>
+        <g id="ld-land">
+          <path d="M30 230 C80 170 170 160 230 200 C280 235 270 290 210 310 C150 335 70 320 40 285Z"/>
+          <path d="M330 150 C390 110 470 120 500 170 C525 215 480 255 420 250 C370 245 310 195 330 150Z"/>
+          <path d="M560 260 C610 215 700 215 740 255 C775 290 750 340 690 345 C630 350 540 310 560 260Z"/>
+          <path d="M800 170 C850 130 930 140 960 190 C985 235 940 275 880 270 C830 262 770 215 800 170Z"/>
+          <path d="M150 380 C200 350 270 355 300 395 C325 430 290 465 235 465 C185 463 120 425 150 380Z"/>
+          <path d="M470 400 C520 375 600 385 625 425 C645 460 600 490 540 485 C490 480 430 435 470 400Z"/>
+        </g>
+      </defs>
+      <circle cx="500" cy="1100" r="935" fill="url(#ld-atmo)"/>
+      <circle cx="500" cy="1100" r="900" fill="url(#ld-ocean)"/>
+      <g clip-path="url(#ld-clip)">
+        <g class="ld-scroll">
+          <use href="#ld-land" class="ld-land" y="60"/>
+          <use href="#ld-land" class="ld-land" x="1000" y="60"/>
+        </g>
+        <ellipse class="ld-ring" cx="500" cy="300" rx="300" ry="40"/>
+      </g>
+    </svg>
+  </div>
+
+  <!-- NEW: results bar (only visible on the results view) -->
+  <div id="results-bar">
+    <svg class="results-sat" viewBox="0 0 400 240" aria-hidden="true"><use href="#satellite"/></svg>
+    <h2>Your field from space</h2>
+    <button class="btn" id="back-home" type="button">New location
+      <span class="btn__icon"><svg class="icon" width="16" height="16"><use href="#i-arrow"/></svg></span></button>
+  </div>
+
   <main>
     <!-- HERO + PLANNER ------------------------------------------------- -->
     <div class="stage">
@@ -42,6 +136,8 @@
         <span class="planet planet--lagoon"></span>
  
         <div class="hero__inner">
+          <!-- NEW: giant hovering satellite -->
+          <svg class="hero-sat" viewBox="0 0 400 240" role="img" aria-label="Satellite hovering above the farm"><use href="#satellite"/></svg>
           <span class="hero__logo"><svg class="icon" style="stroke-width:1.6"><use href="#i-leaf"/></svg></span>
           <p class="eyebrow">Earth intelligence for every acre</p>
           <h1 class="hero__title">Grow smarter<br>from space.</h1>
@@ -77,11 +173,11 @@
               </div>
             </div>
             <label class="field"><span class="field__label">Start date</span>
-              <span class="control"><input type="date" id="gee-start" name="start" value="2025-10-01"></span></label>
+              <span class="control"><input type="date" id="gee-start" name="starbn=t" value="2025-10-01"></span></label>
             <label class="field"><span class="field__label">End date</span>
               <span class="control"><input type="date" id="gee-end" name="end" value="2026-10-01"></span></label>
             <label class="field"><span class="field__label">Farm Radius <span class="field__value" id="rangevalue">250 m</span></span>
-              <span class="control"><input type="range" name="radius" min="50" max="500" step="25" value="250" id="farmrange"></span></label>
+              <span class="control"><input type="range" name="radius" min="50" max="1500" step="25" value="250" id="farmrange"></span></label>
             <button class="btn btn--primary" type="button" id="gee-analyze">Analyze area
               <span class="btn__icon"><svg class="icon" width="16" height="16"><use href="#i-arrow"/></svg></span></button>
           </div>
